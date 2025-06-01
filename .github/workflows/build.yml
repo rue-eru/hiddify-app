@@ -50,7 +50,15 @@ jobs:
 
       - name: make draftBuildCode
         id: draftBuildCode
-        run: echo "::set-output name=datetime::$(date +'%d.%H.%M')"
+        run: echo "datetime=$(date +'%d.%H.%M')" >> $GITHUB_OUTPUT
+
+      - name: Debug Android Env
+        if: startsWith(matrix.platform,'android')
+        run: |
+                echo "ANDROID_HOME: $ANDROID_HOME"
+                ls -la $ANDROID_HOME
+                ./gradlew --version
+
 
 
   build:
@@ -177,6 +185,13 @@ jobs:
         run: |
           make ${{ matrix.platform }}-prepare
           tree
+
+      - name: Install Linux Build Tools
+        if: matrix.platform == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libfuse2 patchelf desktop-file-utils
+      
       - name: Build ${{ matrix.platform }}
         env:
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
